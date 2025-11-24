@@ -381,11 +381,12 @@ esp_err_t tanmatsu_coprocessor_set_camera_gpio0(tanmatsu_coprocessor_handle_t ha
 
 esp_err_t tanmatsu_coprocessor_get_radio_state(tanmatsu_coprocessor_handle_t       handle,
                                                tanmatsu_coprocessor_radio_state_t* out_state) {
-    ESP_RETURN_ON_ERROR(
-        ts_i2c_master_transmit_receive(handle, handle->dev_handle,
-                                       (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_RADIO_CONTROL}, 1, (uint8_t*)out_state,
-                                       sizeof(tanmatsu_coprocessor_radio_state_t), TANMATSU_COPROCESSOR_TIMEOUT_MS),
-        TAG, "Communication fault");
+    uint8_t state = 0;
+    ESP_RETURN_ON_ERROR(ts_i2c_master_transmit_receive(handle, handle->dev_handle,
+                                                       (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_RADIO_CONTROL}, 1,
+                                                       &state, sizeof(uint8_t), TANMATSU_COPROCESSOR_TIMEOUT_MS),
+                        TAG, "Communication fault");
+    *out_state = (tanmatsu_coprocessor_radio_state_t)state;
     return ESP_OK;
 }
 
