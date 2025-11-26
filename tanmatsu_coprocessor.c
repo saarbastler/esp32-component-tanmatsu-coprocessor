@@ -21,7 +21,7 @@
 #define TANMATSU_COPROCESSOR_I2C_REG_DISPLAY_BACKLIGHT     11
 #define TANMATSU_COPROCESSOR_I2C_REG_KEYBOARD_BACKLIGHT    12
 #define TANMATSU_COPROCESSOR_I2C_REG_INTERRUPT             13
-#define TANMATSU_COPROCESSOR_I2C_REG_RESERVED_0            14
+#define TANMATSU_COPROCESSOR_I2C_REG_LED_BRIGHTNESS        14
 #define TANMATSU_COPROCESSOR_I2C_REG_INPUT                 15
 #define TANMATSU_COPROCESSOR_I2C_REG_OUTPUT                16
 #define TANMATSU_COPROCESSOR_I2C_REG_RADIO_CONTROL         17
@@ -69,6 +69,8 @@
 #define TANMATSU_COPROCESSOR_I2C_REG_LED5_G                142
 #define TANMATSU_COPROCESSOR_I2C_REG_LED5_R                143
 #define TANMATSU_COPROCESSOR_I2C_REG_LED5_B                144
+#define TANMATSU_COPROCESSOR_I2C_REG_LED_MODE              145
+#define TANMATSU_COPROCESSOR_I2C_REG_MESSAGE               146
 
 typedef struct tanmatsu_coprocessor {
     i2c_master_dev_handle_t       dev_handle;     /// I2C device handle
@@ -318,6 +320,25 @@ esp_err_t tanmatsu_coprocessor_get_interrupt(tanmatsu_coprocessor_handle_t handl
     if (out_pmic) {
         *out_pmic = (value >> 2) & 1;
     }
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_get_led_brightness(tanmatsu_coprocessor_handle_t handle, uint8_t* out_brightness) {
+    ESP_RETURN_ON_ERROR(ts_i2c_master_transmit_receive(handle, handle->dev_handle,
+                                                       (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_LED_BRIGHTNESS}, 1,
+                                                       out_brightness, 1, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+                        TAG, "Communication fault");
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_set_led_brightness(tanmatsu_coprocessor_handle_t handle, uint8_t brightness) {
+    ESP_RETURN_ON_ERROR(ts_i2c_master_transmit(handle, handle->dev_handle,
+                                               (uint8_t[]){
+                                                   TANMATSU_COPROCESSOR_I2C_REG_LED_BRIGHTNESS,
+                                                   brightness,
+                                               },
+                                               2, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+                        TAG, "Communication fault");
     return ESP_OK;
 }
 
@@ -751,5 +772,78 @@ esp_err_t tanmatsu_coprocessor_set_led_data(tanmatsu_coprocessor_handle_t handle
     ESP_RETURN_ON_ERROR(
         ts_i2c_master_transmit(handle, handle->dev_handle, buffer, length + 1, TANMATSU_COPROCESSOR_TIMEOUT_MS), TAG,
         "Communication fault");
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_get_led_mode(tanmatsu_coprocessor_handle_t handle, bool* out_automatic) {
+    uint8_t mode;
+    ESP_RETURN_ON_ERROR(
+        ts_i2c_master_transmit_receive(handle, handle->dev_handle, (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_LED_MODE},
+                                       1, &mode, 1, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+        TAG, "Communication fault");
+    if (out_automatic) {
+        *out_automatic = (mode & 0x01) >> 0;
+    }
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_set_led_mode(tanmatsu_coprocessor_handle_t handle, bool automatic) {
+    uint8_t mode = (automatic & 0x01) << 0;
+    ESP_RETURN_ON_ERROR(ts_i2c_master_transmit(handle, handle->dev_handle,
+                                               (uint8_t[]){
+                                                   TANMATSU_COPROCESSOR_I2C_REG_LED_MODE,
+                                                   mode,
+                                               },
+                                               2, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+                        TAG, "Communication fault");
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_get_message(tanmatsu_coprocessor_handle_t handle, bool* out_red, bool* out_green,
+                                           bool* out_blue, bool* out_red_b, bool* out_green_b, bool* out_blue_b,
+                                           bool* out_fade, bool* out_fade_hold) {
+    uint8_t message = 0;
+    ESP_RETURN_ON_ERROR(
+        ts_i2c_master_transmit_receive(handle, handle->dev_handle, (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_MESSAGE}, 1,
+                                       &message, 1, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+        TAG, "Communication fault");
+    if (out_red) {
+        *out_red = (message >> 0) & 1;
+    }
+    if (out_green) {
+        *out_green = (message >> 1) & 1;
+    }
+    if (out_blue) {
+        *out_blue = (message >> 2) & 1;
+    }
+    if (out_fade) {
+        *out_fade = (message >> 3) & 1;
+    }
+    if (out_red_b) {
+        *out_red_b = (message >> 4) & 1;
+    }
+    if (out_green_b) {
+        *out_green_b = (message >> 5) & 1;
+    }
+    if (out_blue_b) {
+        *out_blue_b = (message >> 6) & 1;
+    }
+    if (out_fade_hold) {
+        *out_fade_hold = (message >> 7) & 1;
+    }
+    return ESP_OK;
+}
+
+esp_err_t tanmatsu_coprocessor_set_message(tanmatsu_coprocessor_handle_t handle, bool red, bool green, bool blue,
+                                           bool red_b, bool green_b, bool blue_b, bool fade, bool fade_hold) {
+    uint8_t message = (red << 0) | (green << 1) | (blue << 2) | (fade << 3) | (red_b << 4) | (green_b << 5) |
+                      (blue_b << 6) | (fade_hold << 7);
+    ESP_RETURN_ON_ERROR(ts_i2c_master_transmit(handle, handle->dev_handle,
+                                               (uint8_t[]){
+                                                   TANMATSU_COPROCESSOR_I2C_REG_MESSAGE,
+                                                   message,
+                                               },
+                                               2, TANMATSU_COPROCESSOR_TIMEOUT_MS),
+                        TAG, "Communication fault");
     return ESP_OK;
 }
