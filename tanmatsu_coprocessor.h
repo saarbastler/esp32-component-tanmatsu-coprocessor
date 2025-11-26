@@ -193,6 +193,9 @@ esp_err_t tanmatsu_coprocessor_set_keyboard_backlight(tanmatsu_coprocessor_handl
 esp_err_t tanmatsu_coprocessor_get_interrupt(tanmatsu_coprocessor_handle_t handle, bool* out_keyboard, bool* out_input,
                                              bool* out_pmic);
 
+esp_err_t tanmatsu_coprocessor_get_led_brightness(tanmatsu_coprocessor_handle_t handle, uint8_t* out_brightness);
+esp_err_t tanmatsu_coprocessor_set_led_brightness(tanmatsu_coprocessor_handle_t handle, uint8_t brightness);
+
 esp_err_t tanmatsu_coprocessor_get_inputs(tanmatsu_coprocessor_handle_t  handle,
                                           tanmatsu_coprocessor_inputs_t* out_inputs);
 
@@ -250,3 +253,12 @@ esp_err_t tanmatsu_coprocessor_get_pmic_charging_status(tanmatsu_coprocessor_han
 esp_err_t tanmatsu_coprocessor_get_pmic_otg_control(tanmatsu_coprocessor_handle_t handle, bool* out_enable);
 esp_err_t tanmatsu_coprocessor_set_pmic_otg_control(tanmatsu_coprocessor_handle_t handle, bool enable);
 esp_err_t tanmatsu_coprocessor_set_led_data(tanmatsu_coprocessor_handle_t handle, uint8_t* data, uint8_t length);
+
+esp_err_t tanmatsu_coprocessor_get_led_mode(tanmatsu_coprocessor_handle_t handle, bool* out_automatic);
+esp_err_t tanmatsu_coprocessor_set_led_mode(tanmatsu_coprocessor_handle_t handle, bool automatic);
+
+esp_err_t tanmatsu_coprocessor_get_message(tanmatsu_coprocessor_handle_t handle, bool* out_red, bool* out_green,
+                                           bool* out_blue, bool* out_red_b, bool* out_green_b, bool* out_blue_b,
+                                           bool* out_fade, bool* out_fade_hold);
+esp_err_t tanmatsu_coprocessor_set_message(tanmatsu_coprocessor_handle_t handle, bool red, bool green, bool blue,
+                                           bool red_b, bool green_b, bool blue_b, bool fade, bool fade_hold);
