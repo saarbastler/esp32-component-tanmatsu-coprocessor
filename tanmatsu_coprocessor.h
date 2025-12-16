@@ -4,6 +4,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "driver/gpio.h"
@@ -262,3 +266,7 @@ esp_err_t tanmatsu_coprocessor_get_message(tanmatsu_coprocessor_handle_t handle,
                                            bool* out_fade, bool* out_fade_hold);
 esp_err_t tanmatsu_coprocessor_set_message(tanmatsu_coprocessor_handle_t handle, bool red, bool green, bool blue,
                                            bool red_b, bool green_b, bool blue_b, bool fade, bool fade_hold);
+
+#ifdef __cplusplus
+}
+#endif
